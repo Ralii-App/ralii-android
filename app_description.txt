@@ -1,0 +1,93 @@
+# Ralii – Community Action App
+
+**Ralii** is an Android app that connects people in Johannesburg (and beyond) with nearby charities, volunteering opportunities, and grassroots community jobs. Users discover local causes, join or create small initiatives (litter pickups, wall repainting, neighbor help), and get bridged to existing charity communities via WhatsApp, Discord, Instagram, or email — without Ralii hosting chats.
+
+**Core philosophy**: Practical, community-first, grassroots, location-based, lightweight.  
+**Never handles money directly** — fundraisers show goals, QR codes, bank details, or external payment links only.
+
+App store description (polished version):  
+> This Android application connects volunteers with nearby charities and community-driven initiatives. Using location-based discovery, users can find organizations in their area, explore volunteering opportunities, and contribute meaningfully to causes that matter to them.  
+> In addition to formal charity listings, the app empowers users to create and share community jobs, such as neighborhood cleanups, wall repainting, or other local improvement projects. This encourages grassroots participation and makes it easy for individuals to take initiative and mobilize their communities.  
+> Feature Idea: “Request to Join” Charity Communities — Ralii acts as a bridge to existing channels (WhatsApp groups, Discord servers, Instagram pages, email lists).
+
+## Project Structure – Modular Architecture
+
+Ralii uses **multi-module Android architecture** (feature modules + core) for scalability, faster builds, better separation of concerns, and easier team collaboration as the app grows.
+
+### Module Numbering Philosophy
+Modules are grouped in **hundreds** (like university faculties), leaving room for future expansion:
+
+- **100s** → Identity & Access  
+- **200s** → Community Action (Jobs & Volunteering)  
+- **300s** → Groups & Communication  
+- **400s** → Fundraising & Donations  
+- **500s** → Discovery & Location  
+- **600s** → Trust, Safety & Moderation  
+- **700s+** → Admin & Ops, Analytics, Integrations (future)
+
+### Android Modules Overview
+
+| Module Path              | Series | Purpose                              | Key Features / Screens                          | Dependencies                  |
+|--------------------------|--------|--------------------------------------|-------------------------------------------------|--------------------------------|
+| `:app`                   | -      | App entry point                      | Navigation graph, theme, main activity          | All features + `:core`         |
+| `:core`                  | -      | Shared utilities & models            | Common models, utils, theme, DI setup, navigation helpers | -                              |
+| `:feature-auth`          | 100    | Authentication                       | Sign up / login (Firebase Auth)                 | `:core`                        |
+| `:feature-profile`       | 100    | User Profiles & Roles                | Bio, skills, interests, roles (Volunteer/Charity/Admin) | `:core`, `:feature-auth`       |
+| `:feature-jobs`          | 200    | Community Jobs & Volunteering        | Create job, browse & join, participation tracking | `:core`, `:feature-discovery`  |
+| `:feature-groups`        | 300    | Groups & Join Requests               | Charity channels list, "Request to Join" logic  | `:core`                        |
+| `:feature-fundraisers`   | 400    | Fundraisers & Donations              | Create/view fundraiser, show QR/bank details, item donations | `:core`                        |
+| `:feature-discovery`     | 500    | Discovery & Location                 | Nearby search, map view, filters                | `:core`                        |
+| `:feature-safety`        | 600    | Trust, Safety & Moderation (stub)    | Reporting, verification badges (future)         | `:core`                        |
+
+- **Feature modules** are **Android Library** modules (or dynamic-feature for on-demand delivery later).
+- Use **Jetpack Navigation** with deep links between features.
+- Dependency rule: Features depend only on `:core` and other required features (no cyclic dependencies).
+
+### Backend Integration
+
+- **Authentication**: Firebase Auth (ID Tokens)  
+- **API & Database**: AWS Lambda + API Gateway + DynamoDB  
+  - Lambdas verify Firebase tokens via Authorizer  
+  - Endpoints mirror module series (e.g., `/jobs/create`, `/groups/join-request`)
+
+**DynamoDB Tables** (rough mapping):
+
+- `users`, `user_roles`, `user_preferences` (100s)  
+- `community_jobs`, `job_participants`, `job_categories` (200s)  
+- `charity_contacts`, `join_requests` (300s)  
+- `fundraisers`, `donation_items`, `donation_types` (400s)  
+- `locations`, `charity_locations` (geo-indexed, 500s)  
+- `reports`, `verification_status` (600s)
+
+### Tech Stack (Current / Planned)
+
+- Language: Kotlin 100%  
+- UI: Jetpack Compose  
+- DI: Hilt  
+- Navigation: Jetpack Navigation Compose  
+- Backend Auth: Firebase Authentication  
+- Backend API/DB: AWS Lambda, API Gateway, DynamoDB  
+- Location: Google Maps SDK / Places API  
+- Async: Coroutines + Flow  
+- Testing: JUnit, Espresso / Compose Testing, MockK  
+- CI/CD: GitHub Actions (build, test, deploy Lambda on merge)
+
+### Development Guidelines
+
+1. **Start here**: `:feature-auth` (RL-101) + basic profile creation  
+2. Protect branches: `main` requires PR + review  
+3. Naming: Use `rl-XXX` prefix in code/comments where relevant (e.g., `Rl201JobCreationScreen`)  
+4. No money handling: Fundraisers are metadata only — link to external ZA payment providers (Peach Payments, PayFast, EFT QR)  
+5. Keep it lightweight: No in-app chat — bridge to external communities  
+6. ZA focus: Johannesburg neighborhoods, local charities, common languages (English + support for isiZulu/Xhosa strings later)
+
+### Getting Started
+
+```bash
+# Clone the repo
+git clone https://github.com/yourusername/ralii-android.git
+
+# Open in Android Studio
+# Sync Gradle
+# Add Firebase google-services.json
+# Add AWS credentials to local.properties or GitHub Secrets (never commit!)
