@@ -45,5 +45,11 @@ This structure supports long-term growth and makes it easy for contributors to w
 
 ---
 
+
+## 🔗 Related Repositories
+
+- **Ralii Android App**  
+  👉 https://github.com/Ralii-App/ralii-api
+
 ## 📂 Project Structure (Simplified)
 
